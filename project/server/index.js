@@ -1,11 +1,12 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
+import expenseRoutes from './routes/expenses.js';
+import aiRoutes from './routes/ai.js';
 
-const authRoutes = require('./routes/auth');
-const expenseRoutes = require('./routes/expenses');
-const aiRoutes = require('./routes/ai');
+dotenv.config();
 
 const app = express();
 

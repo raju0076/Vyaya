@@ -1,10 +1,9 @@
-const express = require('express');
-const Expense = require('../models/Expense');
-const auth = require('../middleware/auth');
+import express from 'express';
+import Expense from '../models/Expense.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Generate AI insights
 router.post('/insights', auth, async (req, res) => {
   try {
     const expenses = await Expense.find({ user: req.user._id })
@@ -23,12 +22,10 @@ router.post('/insights', auth, async (req, res) => {
   }
 });
 
-// Smart category suggestion
 router.post('/categorize', auth, async (req, res) => {
   try {
     const { description } = req.body;
     const suggestedCategory = categorizeExpense(description);
-    
     res.json({ suggestedCategory });
   } catch (error) {
     console.error('Categorization error:', error);
@@ -36,7 +33,6 @@ router.post('/categorize', auth, async (req, res) => {
   }
 });
 
-// Budget recommendations
 router.get('/budget-recommendations', auth, async (req, res) => {
   try {
     const expenses = await Expense.find({ user: req.user._id })
@@ -51,24 +47,15 @@ router.get('/budget-recommendations', auth, async (req, res) => {
   }
 });
 
-// Helper Functions
 function generateInsights(expenses) {
   const totalAmount = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const avgExpense = totalAmount / expenses.length;
-  
-  // Category analysis
   const categoryStats = expenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
     return acc;
   }, {});
-
-  const topCategory = Object.entries(categoryStats)
-    .sort(([,a], [,b]) => b - a)[0];
-
-  // Weekly trends
+  const topCategory = Object.entries(categoryStats).sort(([, a], [, b]) => b - a)[0];
   const weeklySpending = calculateWeeklyTrends(expenses);
-  
-  // Spending patterns
   const patterns = analyzeSpendingPatterns(expenses);
 
   return {
@@ -91,10 +78,8 @@ function calculateWeeklyTrends(expenses) {
     const weekStart = new Date(expense.date);
     weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     const weekKey = weekStart.toISOString().split('T')[0];
-    
     weeks[weekKey] = (weeks[weekKey] || 0) + expense.amount;
   });
-
   return Object.entries(weeks)
     .sort(([a], [b]) => new Date(b) - new Date(a))
     .slice(0, 4)
@@ -103,15 +88,11 @@ function calculateWeeklyTrends(expenses) {
 
 function analyzeSpendingPatterns(expenses) {
   const patterns = [];
-  
-  // High frequency categories
   const categoryCount = expenses.reduce((acc, exp) => {
     acc[exp.category] = (acc[exp.category] || 0) + 1;
     return acc;
   }, {});
-
-  const mostFrequent = Object.entries(categoryCount)
-    .sort(([,a], [,b]) => b - a)[0];
+  const mostFrequent = Object.entries(categoryCount).sort(([, a], [, b]) => b - a)[0];
 
   if (mostFrequent && mostFrequent[1] > expenses.length * 0.3) {
     patterns.push({
@@ -120,10 +101,9 @@ function analyzeSpendingPatterns(expenses) {
     });
   }
 
-  // Large expenses
   const avgAmount = expenses.reduce((sum, exp) => sum + exp.amount, 0) / expenses.length;
   const largeExpenses = expenses.filter(exp => exp.amount > avgAmount * 2);
-  
+
   if (largeExpenses.length > 0) {
     patterns.push({
       type: 'large_expenses',
@@ -137,11 +117,9 @@ function analyzeSpendingPatterns(expenses) {
 function generateRecommendations(expenses, categoryStats) {
   const recommendations = [];
   const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
-  // Category-based recommendations
+
   Object.entries(categoryStats).forEach(([category, amount]) => {
     const percentage = (amount / total) * 100;
-    
     if (percentage > 40) {
       recommendations.push({
         type: 'category_warning',
@@ -151,7 +129,6 @@ function generateRecommendations(expenses, categoryStats) {
     }
   });
 
-  // Frequency recommendations
   if (expenses.length > 20) {
     const avgPerWeek = expenses.length / 4;
     if (avgPerWeek > 10) {
@@ -173,15 +150,12 @@ function categorizeExpense(description) {
     accommodation: ['hotel', 'rent', 'airbnb', 'room', 'stay', 'lodge', 'hostel'],
     activities: ['gym', 'sport', 'activity', 'class', 'course', 'workshop', 'fitness', 'yoga']
   };
-
   const lowerDesc = description.toLowerCase();
-  
   for (const [category, words] of Object.entries(keywords)) {
     if (words.some(word => lowerDesc.includes(word))) {
       return category;
     }
   }
-  
   return 'other';
 }
 
@@ -189,10 +163,8 @@ function generateBudgetRecommendations(expenses) {
   if (expenses.length === 0) {
     return { recommended: 5000, reasoning: 'Start with a basic budget' };
   }
-
   const monthlySpending = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   const recommendedBudget = Math.ceil(monthlySpending * 1.2 / 1000) * 1000;
-
   return {
     recommended: recommendedBudget,
     current: monthlySpending,
@@ -200,4 +172,4 @@ function generateBudgetRecommendations(expenses) {
   };
 }
 
-module.exports = router;
+export default router;

@@ -1,6 +1,6 @@
-const express = require('express');
-const Expense = require('../models/Expense');
-const auth = require('../middleware/auth');
+import express from 'express';
+import Expense from '../models/Expense.js';
+import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -8,13 +8,13 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 50, category, startDate, endDate } = req.query;
-    
+
     const filter = { user: req.user._id };
-    
+
     if (category && category !== 'all') {
       filter.category = category;
     }
-    
+
     if (startDate && endDate) {
       filter.date = {
         $gte: new Date(startDate),
@@ -67,7 +67,7 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { description, amount, category, date } = req.body;
-    
+
     const expense = await Expense.findOne({
       _id: req.params.id,
       user: req.user._id
@@ -113,9 +113,9 @@ router.delete('/:id', auth, async (req, res) => {
 router.get('/stats', auth, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    
+
     const matchStage = { user: req.user._id };
-    
+
     if (startDate && endDate) {
       matchStage.date = {
         $gte: new Date(startDate),
@@ -157,4 +157,4 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
